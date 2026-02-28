@@ -13,18 +13,26 @@ All persistent memory lives in `.orchestrator/`:
 Check these before making architectural changes or debugging known issues.
 Run `/init` to have Qwen populate them from the codebase if they are empty.
 
-- Project goal: deliver an end-to-end AI Chief of Operations system for Conut that answers 5 business objectives: combo optimization, branch-level demand forecasting, expansion feasibility, shift staffing estimation, and coffee/milkshake growth strategy.
-- Mandatory integration: OpenClaw integration is required for grading and must be demonstrably functional (not theoretical). The system must expose callable operational queries (forecasting, staffing, combos, growth prompts).
-- Data location convention: read from existing repo-root folder `Conut bakery Scaled Data/`. Do not assume `data/raw/...` unless created via explicit reproducible target (copy/symlink).
-- Data reality: all source CSVs are report-style exports with irregular structure (page markers, repeated headers, inline section markers, subtotal/total rows, comma-formatted numerics). Generic CSV loading is an anti-pattern.
-- Parsing decision: implement per-report parsers (file-specific cleaning logic), then normalize to canonical tables. Treat ingestion/cleaning as highest-risk/highest-effort.
-- Known file-specific constraint: `REP_S_00461.csv` (attendance) is positional/no stable headers, includes page breaks and employee sections; parse by column position and section-state, not header names.
-- Basket mining rule for `REP_S_00502.csv`: handle returns/cancellations by netting quantities per customer-order-item; drop zero-net items before basket construction. Do not simply remove negative rows.
-- Modeling guidance: because numeric values are scaled/anonymized, optimize for patterns, ratios, relative comparisons, and ranking rather than absolute business magnitudes.
-- `rep_s_00150.csv` usage: include in both expansion feasibility (customer density/retention/frequency signals) and coffee/milkshake growth strategy (repeat behavior and spend segmentation).
-- Sequencing decision: OpenClaw API/registration mechanism must be researched early and documented concretely (actual protocol/registration path), but this must not block data + modeling steps.
-- Engineering requirement: reproducibility is first-class (`README` runbook, pinned dependencies, executable pipeline, validation-ready repo structure).
-- Testing convention: write tests alongside implementation (parsers, feature logic, service contracts), not as a final phase.
-- Build/tooling correction: add explicit PDF toolchain for executive brief (e.g., `pandoc` or `weasyprint`) and `make pdf` target.
-- Delivery expectations: public GitHub repo, clear README (problem/architecture/run/results), executive brief PDF (<=2 pages), and demo evidence (screenshots/video showing OpenClaw invoking system).
-- Current state note: planning and risk corrections established; implementation should now follow corrected sequencing and constraints above.
+- Project objective: deliver an end-to-end AI Chief of Operations system for Conut across 5 objectives: combo optimization, branch demand forecasting, expansion feasibility, shift staffing estimation, and coffee/milkshake growth strategy.
+- Grading-critical requirement: OpenClaw must be installed, callable, and evidenced (real invocation logs/screenshots/video), not only `SKILL.md` presence.
+- Current state (audit 2026-02-28): pipeline runs, API endpoints respond, smoke tests pass, and `pytest` passed 30/30, but critical/major data and modeling issues remain.
+- Canonical architecture/source-of-truth doc: `orchestrator.md`; check before structural changes.
+- Persistent memory authority: `.orchestrator/bugs.md`, `decisions.md`, `key_facts.md`, `issues.md`, `memory.yaml`; review before debugging recurring issues.
+- Data location convention: load source inputs from repo-root `Conut bakery Scaled Data/`; do not assume `data/raw/...` unless reproducibly created.
+- Data ingestion decision: reports are irregular exports (page markers, repeated headers, section markers, subtotals/totals, quoted/comma numerics); use file-specific parsers, not generic CSV parsing.
+- Anti-pattern: one-size-fits-all CSV parsing is unacceptable for this dataset.
+- Known parser constraint: `REP_S_00461.csv` attendance must be parsed via column position + section state (header-unstable, page/employee blocks).
+- Basket-mining rule (`REP_S_00502.csv`): net quantities by customer-order-item, then drop zero-net items before basket creation; do not simply drop negative rows.
+- Feature requirement: `rep_s_00150.csv` must feed both expansion feasibility and coffee/milkshake growth strategy.
+- Modeling guidance: scaled/anonymized values require emphasis on relative signals (rankings/ratios/patterns) over absolute magnitudes.
+- Approved remediation sequence: parsers → cleaning/validation → shared utilities → model fixes → tests → OpenClaw live checks → docs/evidence → final validation.
+- In-scope remediation files include parsers/cleaners/validators, demand+expansion+staffing features, demand/combo/expansion models, OpenClaw tooling, tests, docs, and validation artifacts.
+- Key implementation decision: partial-period handling is primary fix for demand/expansion trend failures; exclude anomalous trailing months from slope/trend computation (do not only post-clamp).
+- Defensive model guard remains required: clamp physically impossible negative forecasts after modeling.
+- Branch coverage requirement: staffing and combo pipelines must include main `Conut` branch (currently missing due to parser/section carry-over issues).
+- Cleaning/validation requirement: preserve usable rows but explicitly flag and quantify unattributed branch rows (e.g., `branch=None`) instead of silently dropping impact.
+- Combo output requirement: deduplicate merged item-set scores after rule generation to avoid repeated top-N actions.
+- OpenClaw integration decision: document concrete registration/API protocol early, but continue data/model implementation in parallel; final submission must include live proof.
+- Reproducibility standard: pinned deps, executable runbook, deterministic pipeline, tests alongside code, and validation outputs under `artifacts/` and `artifacts/test_logs/`.
+
+*(body trimmed to stay within the 400-word limit)*

@@ -8,7 +8,13 @@ def compute_staffing_metrics(
     attendance: pd.DataFrame,
     monthly_sales: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Compute current staffing ratios per branch and shift period."""
+    """Compute current staffing ratios per branch and shift period.
+
+    For branches present in monthly_sales but absent from attendance
+    (e.g. the main 'Conut' branch is absent from REP_S_00461.csv),
+    a synthetic estimate is generated from the cross-branch median
+    staffing-to-revenue ratio so those branches are still covered.
+    """
 
     if attendance.empty:
         return pd.DataFrame()
@@ -56,5 +62,38 @@ def compute_staffing_metrics(
     merged = avg_staff.merge(branch_rev, on="branch", how="left")
     if not merged.empty and "avg_monthly_revenue" in merged.columns:
         merged["revenue_per_staff"] = merged["avg_monthly_revenue"] / merged["avg_staff"].clip(lower=1)
+    merged["_estimated"] = False  # Pre-set so concat doesn't produce mixed-type NaN
+
+    # Identify branches present in monthly_sales but missing from attendance
+    branches_with_attendance = set(avg_staff["branch"].unique())
+    all_branches = set(branch_rev["branch"].unique())
+    missing_branches = all_branches - branches_with_attendance
+
+    if missing_branches and not merged.empty:
+        # Compute median staffing metrics across known branches as fallback
+        median_avg_staff = merged.groupby("shift")["avg_staff"].median()
+        median_avg_hours = merged.groupby("shift")["avg_hours"].median()
+
+        fallback_rows = []
+        for branch in missing_branches:
+            branch_revenue = branch_rev.loc[branch_rev["branch"] == branch, "avg_monthly_revenue"]
+            rev = float(branch_revenue.iloc[0]) if len(branch_revenue) > 0 else 0.0
+            for shift in ["morning", "evening", "night"]:
+                est_staff = float(median_avg_staff.get(shift, 2.0))
+                est_hours = float(median_avg_hours.get(shift, 6.0))
+                rps = rev / max(est_staff, 1.0)
+                fallback_rows.append({
+                    "branch": branch,
+                    "shift": shift,
+                    "avg_staff": round(est_staff, 1),
+                    "avg_hours": round(est_hours, 1),
+                    "avg_monthly_revenue": rev,
+                    "revenue_per_staff": rps,
+                    "_estimated": True,
+                })
+
+        if fallback_rows:
+            fallback_df = pd.DataFrame(fallback_rows)
+            merged = pd.concat([merged, fallback_df], ignore_index=True)
 
     return merged

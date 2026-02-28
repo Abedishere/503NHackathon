@@ -29,3 +29,26 @@ class TestDemandForecaster:
                 assert "predicted" in f
                 assert "lower" in f
                 assert "upper" in f
+
+    def test_forecast_no_negative_predictions(self, monthly_data):
+        """All predicted, lower, and upper values must be >= 0 (audit 4.2 fix)."""
+        result = run_demand_forecast(monthly_data, branch="all", horizon_months=3)
+        for score in result["scores"]:
+            for f in score["forecast"]:
+                assert f["predicted"] >= 0, (
+                    f"Negative predicted for {score['branch']}: {f['predicted']}"
+                )
+                assert f["lower"] >= 0, (
+                    f"Negative lower bound for {score['branch']}: {f['lower']}"
+                )
+
+    def test_monthly_sales_values_correct_scale(self, monthly_data):
+        """Monthly sales totals must be correctly parsed (not truncated at first comma)."""
+        # Conut Oct 2025 is ~1.137B; if parser is broken it reads as 1.0
+        conut = monthly_data[
+            (monthly_data["branch"] == "Conut") & (monthly_data["month"] == "October")
+        ]
+        assert not conut.empty, "Conut October row missing"
+        assert conut["total"].iloc[0] > 1_000_000_000, (
+            "Conut October total should be >1B; parser quoting bug may have returned truncated value"
+        )

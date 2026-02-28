@@ -2,6 +2,7 @@
 
 import pandas as pd
 import numpy as np
+from src.features.time_series_utils import clean_series_for_trend, compute_slope
 
 
 def build_branch_health_scores(
@@ -9,8 +10,13 @@ def build_branch_health_scores(
     tax_summary: pd.DataFrame,
     customer_orders: pd.DataFrame,
     avg_menu_sales: pd.DataFrame,
+    partial_period_threshold: float = 0.30,
 ) -> pd.DataFrame:
-    """Score each branch on health metrics for expansion analysis."""
+    """Score each branch on health metrics for expansion analysis.
+
+    Uses shared partial-period exclusion so anomalous trailing months
+    (e.g. a partially-exported final month) don't distort revenue slope.
+    """
 
     branches = monthly_sales["branch"].unique()
     records = []
@@ -18,14 +24,14 @@ def build_branch_health_scores(
     for branch in branches:
         branch_monthly = monthly_sales[monthly_sales["branch"] == branch]
 
-        # Revenue trend (slope of monthly sales)
+        # Revenue trend (slope excluding anomalous trailing partial months)
         if len(branch_monthly) >= 2:
             totals = branch_monthly.sort_values("month_num")["total"].values
-            x = np.arange(len(totals))
-            slope = np.polyfit(x, totals, 1)[0] if len(totals) > 1 else 0
+            clean_totals = clean_series_for_trend(totals, threshold=partial_period_threshold)
+            slope = compute_slope(clean_totals)
             trend = "increasing" if slope > 0 else "decreasing"
         else:
-            slope = 0
+            slope = 0.0
             trend = "flat"
 
         total_revenue = branch_monthly["total"].sum()

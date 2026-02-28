@@ -32,6 +32,12 @@ git init
 git checkout -b main 2>/dev/null || git symbolic-ref HEAD refs/heads/main
 BRANCH=$(git symbolic-ref --short HEAD)
 git remote add origin "$REMOTE_URL"
+
+# Exclude the script and log from git tracking locally
+echo "push_gradual.sh" >> .git/info/exclude
+echo "push_gradual.log" >> .git/info/exclude
+echo ".idea/" >> .git/info/exclude
+
 echo "[$(date '+%H:%M:%S')] Ready on branch: $BRANCH"
 echo ""
 
@@ -48,6 +54,10 @@ push_group() {
     local n="${#files[@]}"
 
     echo "[$(date '+%H:%M:%S')] ── $message  ($n file(s)) ──"
+
+    # Unstage everything first so ONLY the intended files go in
+    git restore --staged -- . 2>/dev/null || true
+
     git add -- "${files[@]}"
     git commit -m "$message"
 
@@ -66,8 +76,7 @@ push_group() {
     echo ""
 }
 
-# Convenience: compute delay automatically from file count
-# Usage: push_auto "message" file1 file2 …
+# Auto-compute delay from file count
 push_auto() {
     local message="$1"
     shift
@@ -78,7 +87,7 @@ push_auto() {
 }
 
 # ════════════════════════════════════════════════════════════
-#  GROUPS  (delay computed automatically per file count)
+#  GROUPS  (delay = n_files × 114 s)
 # ════════════════════════════════════════════════════════════
 
 # 1 · Bootstrap  (4 files → 456 s)

@@ -48,6 +48,27 @@ class TestIngestion:
         assert "branch" in df.columns
         assert "num_orders" in df.columns
 
+    def test_customer_orders_all_branches_present(self):
+        """All 4 branches must be in customer_orders with no branch=None (audit 4.6 fix)."""
+        df = parse_customer_orders()
+        null_count = df["branch"].isna().sum()
+        assert null_count == 0, (
+            f"{null_count} rows have branch=None; 'Conut - Tyre' section header skip bug"
+        )
+        branches = set(df["branch"].unique())
+        for expected in ("Conut", "Conut - Tyre", "Conut Jnah", "Main Street Coffee"):
+            assert expected in branches, f"'{expected}' missing from customer_orders branches"
+
+    def test_monthly_sales_totals_not_truncated(self):
+        """Monthly sales totals must be full quoted-number values, not truncated (audit 4.2 root cause)."""
+        df = parse_monthly_sales()
+        # Conut Oct 2025: raw value is "1,137,352,241.41" -> must be ~1.137B not 1.0
+        conut_oct = df[(df["branch"] == "Conut") & (df["month"] == "October")]
+        assert not conut_oct.empty
+        assert conut_oct["total"].iloc[0] > 1_000_000_000, (
+            "Conut October total is not >1B; csv.reader fix for quoted numbers may be missing"
+        )
+
     def test_parse_item_sales(self):
         df = parse_item_sales()
         assert not df.empty

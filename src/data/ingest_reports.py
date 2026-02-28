@@ -2,8 +2,12 @@
 
 Each report has a unique layout with page headers, section markers, and sub-totals.
 Every parser returns a clean pandas DataFrame ready for downstream processing.
+
+NOTE: All parsers use csv.reader for correct handling of quoted comma-formatted
+numerics (e.g. "1,137,352,241.41" must not be split on the internal commas).
 """
 
+import csv
 import re
 import pandas as pd
 from pathlib import Path
@@ -25,13 +29,24 @@ def _parse_number(val: str) -> float:
         return 0.0
 
 
-def _is_page_header(line: str) -> bool:
-    """Detect report page-break header lines."""
-    return bool(re.search(r"Page \d+ of", line))
+def _is_page_header(parts: list[str]) -> bool:
+    """Detect report page-break header lines from a parsed row."""
+    raw = ",".join(parts)
+    return bool(re.search(r"Page \d+ of", raw))
 
 
-def _is_copyright(line: str) -> bool:
-    return "Copyright" in line or "omegapos" in line.lower() or line.startswith("REP_S_") or line.startswith("rep_s_")
+def _is_copyright(parts: list[str]) -> bool:
+    raw = ",".join(parts)
+    return "Copyright" in raw or "omegapos" in raw.lower() or parts[0].startswith("REP_S_") or parts[0].startswith("rep_s_")
+
+
+def _read_csv_rows(path: Path) -> list[list[str]]:
+    """Read file using csv.reader, returning list of stripped-field rows."""
+    rows = []
+    with open(path, encoding="utf-8", newline="") as f:
+        for row in csv.reader(f):
+            rows.append([p.strip() for p in row])
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -39,68 +54,61 @@ def _is_copyright(line: str) -> bool:
 # ---------------------------------------------------------------------------
 def parse_division_summary(path: Path | None = None) -> pd.DataFrame:
     path = path or FILES["division_summary"]
-    rows = []
+    rows_out = []
     current_branch = None
 
-    with open(path, encoding="utf-8") as f:
-        lines = f.readlines()
+    for parts in _read_csv_rows(path):
+        if not any(parts):
+            continue
+        if _is_page_header(parts) or _is_copyright(parts):
+            continue
+        raw0 = parts[0]
 
-    for line in lines:
-        line = line.strip()
-        if not line or _is_page_header(line) or _is_copyright(line):
+        if raw0.startswith("Summary By Division") or raw0.startswith("30-Jan-26"):
             continue
-        if line.startswith("Conut - Tyre,") and "Summary" in line:
-            continue
-        if line.startswith("Summary By Division") or line.startswith("30-Jan-26"):
-            continue
-
-        parts = [p.strip().strip('"') for p in line.split(",")]
 
         # Column header rows
-        if parts == ["", "DELIVERY", "TABLE", "TAKE AWAY", "TOTAL"] or \
-           parts[:4] == ["DELIVERY", "TABLE", "TAKE AWAY", "TOTAL"]:
+        flat = [p for p in parts if p]
+        if flat == ["DELIVERY", "TABLE", "TAKE AWAY", "TOTAL"] or \
+           flat[:4] == ["DELIVERY", "TABLE", "TAKE AWAY", "TOTAL"]:
             continue
 
-        # Detect branch name (first column is non-empty and is a known branch)
-        if parts[0] and parts[0] not in ("", "TOTAL") and not parts[0].startswith(","):
-            # Could be branch header or branch + category row
-            candidate = parts[0].strip()
-            if candidate in ("Conut", "Conut - Tyre", "Conut Jnah", "Main Street Coffee"):
-                current_branch = candidate
-                # Check if this line also has category data
-                if len(parts) > 1 and parts[1]:
-                    category = parts[1]
-                    delivery = _parse_number(parts[2]) if len(parts) > 2 else 0.0
-                    table = _parse_number(parts[3]) if len(parts) > 3 else 0.0
-                    take_away = _parse_number(parts[4]) if len(parts) > 4 else 0.0
-                    total = _parse_number(parts[5]) if len(parts) > 5 else 0.0
-                    if category != "TOTAL":
-                        rows.append({
-                            "branch": current_branch,
-                            "category": category,
-                            "delivery": delivery,
-                            "table": table,
-                            "take_away": take_away,
-                            "total": total,
-                        })
-                continue
+        # Detect branch name
+        candidate = raw0
+        if candidate in ("Conut", "Conut - Tyre", "Conut Jnah", "Main Street Coffee"):
+            current_branch = candidate
+            # Check if this line also has category data
+            if len(parts) > 1 and parts[1]:
+                category = parts[1]
+                delivery = _parse_number(parts[2]) if len(parts) > 2 else 0.0
+                table = _parse_number(parts[3]) if len(parts) > 3 else 0.0
+                take_away = _parse_number(parts[4]) if len(parts) > 4 else 0.0
+                total = _parse_number(parts[5]) if len(parts) > 5 else 0.0
+                if category != "TOTAL":
+                    rows_out.append({
+                        "branch": current_branch,
+                        "category": category,
+                        "delivery": delivery,
+                        "table": table,
+                        "take_away": take_away,
+                        "total": total,
+                    })
+            continue
 
         # Category row (branch is empty, first non-empty is category)
         if current_branch and len(parts) > 1:
-            category = parts[0] if parts[0] else (parts[1] if len(parts) > 1 else "")
+            category = raw0 if raw0 else (parts[1] if len(parts) > 1 else "")
             if not category or category == "TOTAL":
                 continue
 
-            # Find numeric columns — depends on which layout section
-            # Layout A (first section): col0=branch, col1=category, col2=delivery, col3=table, col4=take_away, col5=total
-            # Layout B (later): col0=branch, col1=category, col2=delivery, col3=table, col4=take_away, col5=total
             nums = []
             for p in parts[1:]:
-                if p and re.match(r"^-?[\d,]+\.?\d*$", p.replace('"', '').replace(',', '')):
+                p_clean = p.replace(",", "").replace('"', "")
+                if p_clean and re.match(r"^-?[\d]+\.?\d*$", p_clean):
                     nums.append(_parse_number(p))
 
             if len(nums) >= 4:
-                rows.append({
+                rows_out.append({
                     "branch": current_branch,
                     "category": category,
                     "delivery": nums[0],
@@ -109,7 +117,7 @@ def parse_division_summary(path: Path | None = None) -> pd.DataFrame:
                     "total": nums[3],
                 })
             elif len(nums) >= 1:
-                rows.append({
+                rows_out.append({
                     "branch": current_branch,
                     "category": category,
                     "delivery": nums[0] if len(nums) > 0 else 0.0,
@@ -118,7 +126,7 @@ def parse_division_summary(path: Path | None = None) -> pd.DataFrame:
                     "total": nums[3] if len(nums) > 3 else 0.0,
                 })
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows_out)
     log.info(f"Parsed division_summary: {len(df)} rows")
     return df
 
@@ -128,36 +136,37 @@ def parse_division_summary(path: Path | None = None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def parse_tax_summary(path: Path | None = None) -> pd.DataFrame:
     path = path or FILES["tax_summary"]
-    rows = []
+    rows_out = []
+    branch = None
 
-    with open(path, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        line = line.strip()
-        if not line or _is_page_header(line) or _is_copyright(line):
+    for parts in _read_csv_rows(path):
+        if not any(parts):
             continue
-        if "Tax Report" in line or "Conut - Tyre" in line or "Year:" in line:
+        if _is_page_header(parts) or _is_copyright(parts):
             continue
-        if line.startswith("TAX DESCRIPTION"):
+        raw0 = parts[0]
+
+        if "Tax Report" in raw0 or "Year:" in raw0:
+            continue
+        if raw0.startswith("TAX DESCRIPTION"):
+            continue
+        if raw0 in ("Conut - Tyre",) and not any(parts[1:]):
+            continue  # Report title line
+
+        if raw0.startswith("Branch Name:"):
+            branch = raw0.replace("Branch Name:", "").strip()
             continue
 
-        parts = [p.strip().strip('"') for p in line.split(",")]
-
-        if parts[0].startswith("Branch Name:"):
-            branch = parts[0].replace("Branch Name:", "").strip()
-            continue
-
-        if parts[0] == "Total By Branch":
+        if raw0 == "Total By Branch":
             vat = _parse_number(parts[1]) if len(parts) > 1 else 0.0
             total = _parse_number(parts[-2]) if len(parts) > 2 else vat
-            rows.append({
+            rows_out.append({
                 "branch": branch,
                 "vat_11_pct": vat,
                 "total_tax": total,
             })
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows_out)
     log.info(f"Parsed tax_summary: {len(df)} rows")
     return df
 
@@ -167,29 +176,26 @@ def parse_tax_summary(path: Path | None = None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def parse_attendance(path: Path | None = None) -> pd.DataFrame:
     path = path or FILES["attendance"]
-    rows = []
+    rows_out = []
     current_emp_id = None
     current_emp_name = None
     current_branch = None
 
-    with open(path, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        line = line.strip()
-        if not line or _is_copyright(line):
+    for parts in _read_csv_rows(path):
+        if not any(parts):
+            continue
+        if _is_copyright(parts):
+            continue
+        if _is_page_header(parts):
             continue
 
-        parts = [p.strip() for p in line.split(",")]
+        raw0 = parts[0]
 
-        # Page header
-        if _is_page_header(line):
+        if "Time & Attendance" in raw0 or raw0 in ("Conut - Tyre",):
             continue
-        if "Time & Attendance" in line or line == "Conut - Tyre":
+        if "PUNCH IN" in raw0 or "PUNCH IN" in ",".join(parts):
             continue
-        if "PUNCH IN" in line:
-            continue
-        if "From Date:" in line and "30-Jan-26" in line:
+        if "From Date:" in ",".join(parts) and "30-Jan-26" in parts[0]:
             continue
 
         # Employee header: ,EMP ID :X,NAME :PersonXXXX,,
@@ -201,26 +207,26 @@ def parse_attendance(path: Path | None = None) -> pd.DataFrame:
             continue
 
         # Branch line: ,Branch Name,,,,
-        if len(parts) >= 2 and parts[0] == "" and parts[1] in (
+        if raw0 == "" and len(parts) >= 2 and parts[1] in (
             "Main Street Coffee", "Conut - Tyre", "Conut Jnah", "Conut"
         ):
             current_branch = parts[1]
             continue
 
         # Total row
-        if "Total :" in line:
+        if "Total :" in ",".join(parts):
             continue
 
         # Data row: date,,punch_in_time,date,,punch_out_time,duration
-        date_match = re.match(r"(\d{2}-\w{3}-\d{2})", parts[0]) if parts else None
+        date_match = re.match(r"(\d{2}-\w{3}-\d{2})", raw0) if raw0 else None
         if date_match and current_emp_id:
-            punch_in_date = parts[0]
+            punch_in_date = raw0
             punch_in_time = parts[2] if len(parts) > 2 else ""
             punch_out_date = parts[3] if len(parts) > 3 else ""
             punch_out_time = parts[4] if len(parts) > 4 else ""
             duration = parts[5] if len(parts) > 5 else ""
 
-            rows.append({
+            rows_out.append({
                 "emp_id": current_emp_id,
                 "emp_name": current_emp_name,
                 "branch": current_branch,
@@ -231,16 +237,15 @@ def parse_attendance(path: Path | None = None) -> pd.DataFrame:
                 "duration_str": duration,
             })
 
-    df = pd.DataFrame(rows)
-    # Parse duration into hours
+    df = pd.DataFrame(rows_out)
+
     def _dur_to_hours(d: str) -> float:
         if not d:
             return 0.0
-        # Format can be HH:MM:SS or HH.MM.SS or H:MM:SS
         d = d.replace(".", ":")
-        parts = d.split(":")
+        p = d.split(":")
         try:
-            h, m, s = float(parts[0]), float(parts[1]), float(parts[2])
+            h, m, s = float(p[0]), float(p[1]), float(p[2])
             return h + m / 60.0 + s / 3600.0
         except (ValueError, IndexError):
             return 0.0
@@ -257,64 +262,55 @@ def parse_attendance(path: Path | None = None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def parse_sales_detail(path: Path | None = None) -> pd.DataFrame:
     path = path or FILES["sales_detail"]
-    rows = []
+    rows_out = []
     current_customer = None
     current_branch = None
 
-    with open(path, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        raw = line.strip()
-        if not raw or _is_copyright(raw):
+    for parts in _read_csv_rows(path):
+        if not any(parts):
             continue
-        if _is_page_header(raw):
+        if _is_copyright(parts):
             continue
-        if raw.startswith("Sales by customer") or raw == "Conut - Tyre,,,,":
-            continue
-        if raw.startswith("Full Name,"):
+        if _is_page_header(parts):
             continue
 
-        parts = [p.strip() for p in line.split(",")]
+        raw0 = parts[0]
+
+        if raw0.startswith("Sales by customer"):
+            continue
+        if raw0.startswith("Full Name"):
+            continue
 
         # Branch marker: "Branch :BranchName,,,,"
-        if parts[0].startswith("Branch :"):
-            current_branch = parts[0].replace("Branch :", "").strip()
+        if raw0.startswith("Branch :"):
+            current_branch = raw0.replace("Branch :", "").strip()
             continue
 
         # Total Branch row
-        if parts[0].startswith("Total Branch:"):
+        if raw0.startswith("Total Branch:"):
             continue
 
-        # Customer header: "Person_XXXX,,,,"
-        if re.match(r"^Person_\d+$", parts[0]):
-            current_customer = parts[0]
+        # Customer header: "Person_XXXX,,,," or "C_XXXX,..." etc.
+        if re.match(r"^(Person_\d+|C_\d+)$", raw0):
+            current_customer = raw0
             continue
 
         # Customer total: "Total :,qty,,price,"
-        if parts[0] == "Total :":
+        if raw0 == "Total :":
             continue
 
-        # Item row: ",qty,  description,price,"
-        if parts[0] == "" and len(parts) >= 4:
-            qty_str = parts[1].strip()
-            # Description may contain commas — reconstruct
-            # The price is the last numeric field
-            # Find the price (last field that looks numeric)
-            price_str = ""
-            desc_parts = []
-            for i in range(2, len(parts)):
-                val = parts[i].strip().strip('"')
-                if val and re.match(r'^-?[\d,]+\.?\d*$', val.replace(",", "")):
-                    price_str = val
-                elif val:
-                    desc_parts.append(val)
+        # Item row: starts with empty first field
+        if raw0 == "" and len(parts) >= 4:
+            qty_str = parts[1]
+            # Description is parts[2], price is parts[3]
+            # (csv.reader handles quoted commas in description and price correctly)
+            desc = parts[2].strip() if len(parts) > 2 else ""
+            price_str = parts[3] if len(parts) > 3 else ""
 
-            desc = " ".join(desc_parts).strip()
             qty = _parse_number(qty_str)
             price = _parse_number(price_str)
 
-            rows.append({
+            rows_out.append({
                 "branch": current_branch,
                 "customer": current_customer,
                 "qty": qty,
@@ -322,7 +318,7 @@ def parse_sales_detail(path: Path | None = None) -> pd.DataFrame:
                 "price": price,
             })
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows_out)
     log.info(f"Parsed sales_detail: {len(df)} rows")
     return df
 
@@ -332,30 +328,30 @@ def parse_sales_detail(path: Path | None = None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def parse_customer_orders(path: Path | None = None) -> pd.DataFrame:
     path = path or FILES["customer_orders"]
-    rows = []
+    rows_out = []
     current_branch = None
 
-    with open(path, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        raw = line.strip()
-        if not raw or _is_copyright(raw):
+    for parts in _read_csv_rows(path):
+        if not any(parts):
             continue
-        if _is_page_header(raw):
+        if _is_copyright(parts):
             continue
-        if raw.startswith("Customer Orders") or raw.startswith("Conut - Tyre,"):
-            continue
-        if raw.startswith("Customer Name,"):
+        if _is_page_header(parts):
             continue
 
-        parts = [p.strip() for p in line.split(",")]
+        raw0 = parts[0]
 
-        # Branch header (standalone)
-        name = parts[0].strip()
+        # Skip report-level headers
+        if raw0.startswith("Customer Orders"):
+            continue
+        if raw0.startswith("Customer Name"):
+            continue
+
+        # Branch section header: "BranchName,,,,,,,,,,"
+        # Detected when parts[0] is a known branch name and the rest are empty
+        name = raw0
         if name in ("Conut - Tyre", "Conut Jnah", "Main Street Coffee", "Conut"):
-            # Check if it's just a branch header (rest is empty)
-            rest = [p.strip() for p in parts[1:] if p.strip()]
+            rest = [p for p in parts[1:] if p]
             if not rest:
                 current_branch = name
                 continue
@@ -363,18 +359,22 @@ def parse_customer_orders(path: Path | None = None) -> pd.DataFrame:
         if name.startswith("Total By Branch") or name.startswith("Total by Branch"):
             continue
 
-        # Data row: name,address,phone,first_order,,last_order,,total,num_orders,
+        # Total row with leading empty cells: ",,Total By Branch,..."
+        if raw0 == "" and len(parts) > 2 and parts[2].startswith("Total By Branch"):
+            continue
+
+        # Data row: Person_XXXX,address,phone,first_order,,last_order,,total,num_orders,
         if name.startswith("Person_"):
-            address = parts[1].strip() if len(parts) > 1 else ""
-            phone = parts[2].strip() if len(parts) > 2 else ""
-            first_order = parts[3].strip() if len(parts) > 3 else ""
+            address = parts[1] if len(parts) > 1 else ""
+            phone = parts[2] if len(parts) > 2 else ""
+            first_order = parts[3] if len(parts) > 3 else ""
             # Skip blank col (index 4)
-            last_order = parts[5].strip() if len(parts) > 5 else ""
+            last_order = parts[5] if len(parts) > 5 else ""
             # Skip blank col (index 6)
             total = _parse_number(parts[7]) if len(parts) > 7 else 0.0
             num_orders = _parse_number(parts[8]) if len(parts) > 8 else 0.0
 
-            rows.append({
+            rows_out.append({
                 "branch": current_branch,
                 "customer": name,
                 "phone": phone,
@@ -384,7 +384,7 @@ def parse_customer_orders(path: Path | None = None) -> pd.DataFrame:
                 "num_orders": int(num_orders),
             })
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows_out)
     log.info(f"Parsed customer_orders: {len(df)} rows")
     return df
 
@@ -394,60 +394,58 @@ def parse_customer_orders(path: Path | None = None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def parse_item_sales(path: Path | None = None) -> pd.DataFrame:
     path = path or FILES["item_sales"]
-    rows = []
+    rows_out = []
     current_branch = None
     current_division = None
     current_group = None
 
-    with open(path, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        raw = line.strip()
-        if not raw or _is_copyright(raw):
+    for parts in _read_csv_rows(path):
+        if not any(parts):
             continue
-        if _is_page_header(raw):
+        if _is_copyright(parts):
             continue
-        if raw.startswith("Sales by Items") or raw.startswith("Conut - Tyre,"):
-            continue
-        if raw.startswith("Description,Barcode"):
+        if _is_page_header(parts):
             continue
 
-        parts = [p.strip().strip('"') for p in line.split(",")]
+        raw0 = parts[0]
+
+        if raw0.startswith("Sales by Items"):
+            continue
+        if raw0.startswith("Description"):
+            continue
 
         # Branch header
-        if parts[0].startswith("Branch:"):
-            current_branch = parts[0].replace("Branch:", "").strip()
+        if raw0.startswith("Branch:"):
+            current_branch = raw0.replace("Branch:", "").strip()
             continue
-        if parts[0].startswith("Total by Branch:"):
-            branch_name = parts[0].replace("Total by Branch:", "").strip()
+        if raw0.startswith("Total by Branch:"):
             continue
 
         # Division header
-        if parts[0].startswith("Division:"):
-            current_division = parts[0].replace("Division:", "").strip()
+        if raw0.startswith("Division:"):
+            current_division = raw0.replace("Division:", "").strip()
             continue
-        if parts[0].startswith("Total by Division:"):
+        if raw0.startswith("Total by Division:"):
             continue
 
         # Group header
-        if parts[0].startswith("Group:"):
-            current_group = parts[0].replace("Group:", "").strip()
+        if raw0.startswith("Group:"):
+            current_group = raw0.replace("Group:", "").strip()
             continue
-        if parts[0].startswith("Total by Group:"):
+        if raw0.startswith("Total by Group:"):
             continue
 
         # Item row: description, barcode, qty, total_amount
-        desc = parts[0]
+        desc = raw0
         if not desc:
             continue
 
-        # Find qty and total from remaining parts
+        # Find qty and total from remaining parts (csv.reader already stripped quotes)
         nums = []
         barcode = ""
         for p in parts[1:]:
-            p_clean = p.replace(",", "").replace('"', '')
-            if re.match(r'^-?\d+\.?\d*$', p_clean) and p_clean:
+            p_clean = p.replace(",", "")
+            if p_clean and re.match(r"^-?\d+\.?\d*$", p_clean):
                 nums.append(_parse_number(p))
             elif p and not barcode:
                 barcode = p
@@ -455,7 +453,7 @@ def parse_item_sales(path: Path | None = None) -> pd.DataFrame:
         qty = nums[0] if len(nums) > 0 else 0.0
         total_amount = nums[1] if len(nums) > 1 else 0.0
 
-        rows.append({
+        rows_out.append({
             "branch": current_branch or "Conut - Tyre",
             "division": current_division,
             "group": current_group,
@@ -465,7 +463,7 @@ def parse_item_sales(path: Path | None = None) -> pd.DataFrame:
             "total_amount": total_amount,
         })
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows_out)
     log.info(f"Parsed item_sales: {len(df)} rows")
     return df
 
@@ -475,50 +473,48 @@ def parse_item_sales(path: Path | None = None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def parse_monthly_sales(path: Path | None = None) -> pd.DataFrame:
     path = path or FILES["monthly_sales"]
-    rows = []
+    rows_out = []
     current_branch = None
 
-    with open(path, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        raw = line.strip()
-        if not raw or _is_copyright(raw) or _is_page_header(raw):
+    for parts in _read_csv_rows(path):
+        if not any(parts):
             continue
-        if "Monthly Sales" in raw or raw == "Conut - Tyre,,,,":
-            continue
-        if raw.startswith("30-Jan-26"):
-            continue
-        if raw.startswith("Month,"):
+        if _is_copyright(parts) or _is_page_header(parts):
             continue
 
-        parts = [p.strip().strip('"') for p in line.split(",")]
+        raw0 = parts[0]
+
+        if "Monthly Sales" in raw0 or raw0.startswith("30-Jan-26"):
+            continue
+        if raw0.startswith("Month"):
+            continue
 
         # Branch header
-        if parts[0].startswith("Branch Name:"):
-            current_branch = parts[0].replace("Branch Name:", "").strip()
+        if raw0.startswith("Branch Name:"):
+            current_branch = raw0.replace("Branch Name:", "").strip()
             continue
 
         # Total/Grand Total
-        if "Total" in parts[0] or "Grand Total" in " ".join(parts):
+        if "Total" in raw0 or "Grand Total" in ",".join(parts):
             continue
 
         # Data row: month,,year,total,
-        month_name = parts[0]
+        month_name = raw0
         if month_name in (
             "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         ):
+            # csv.reader already handles quoted fields: parts[3] = "554,074,782.88" (unquoted)
             year = parts[2] if len(parts) > 2 else "2025"
             total = _parse_number(parts[3]) if len(parts) > 3 else 0.0
-            rows.append({
+            rows_out.append({
                 "branch": current_branch,
                 "month": month_name,
-                "year": int(year),
+                "year": int(year) if year.isdigit() else 2025,
                 "total": total,
             })
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows_out)
     log.info(f"Parsed monthly_sales: {len(df)} rows")
     return df
 
@@ -528,25 +524,24 @@ def parse_monthly_sales(path: Path | None = None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 def parse_avg_menu_sales(path: Path | None = None) -> pd.DataFrame:
     path = path or FILES["avg_menu_sales"]
-    rows = []
+    rows_out = []
     current_branch = None
 
-    with open(path, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        raw = line.strip()
-        if not raw or _is_copyright(raw) or _is_page_header(raw):
+    for parts in _read_csv_rows(path):
+        if not any(parts):
             continue
-        if "Average Sales" in raw or raw.startswith("Conut - Tyre,") or raw.startswith("30-Jan-26"):
-            continue
-        if raw.startswith("Menu Name,"):
+        if _is_copyright(parts) or _is_page_header(parts):
             continue
 
-        parts = [p.strip().strip('"') for p in line.split(",")]
+        raw0 = parts[0]
+
+        if "Average Sales" in raw0 or raw0.startswith("30-Jan-26"):
+            continue
+        if raw0.startswith("Menu Name"):
+            continue
 
         # Branch header
-        name = parts[0]
+        name = raw0
         if name in ("Conut - Tyre", "Conut Jnah", "Main Street Coffee", "Conut"):
             rest = [p for p in parts[1:] if p]
             if not rest:
@@ -561,7 +556,7 @@ def parse_avg_menu_sales(path: Path | None = None) -> pd.DataFrame:
             num_cust = _parse_number(parts[1]) if len(parts) > 1 else 0.0
             sales = _parse_number(parts[2]) if len(parts) > 2 else 0.0
             avg_customer = _parse_number(parts[3]) if len(parts) > 3 else 0.0
-            rows.append({
+            rows_out.append({
                 "branch": current_branch,
                 "menu_type": name,
                 "num_customers": int(num_cust),
@@ -569,7 +564,7 @@ def parse_avg_menu_sales(path: Path | None = None) -> pd.DataFrame:
                 "avg_customer": avg_customer,
             })
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows_out)
     log.info(f"Parsed avg_menu_sales: {len(df)} rows")
     return df
 

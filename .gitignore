@@ -10,3 +10,6 @@ build/
 artifacts/
 .pytest_cache/
 .mypy_cache/
+.idea/
+push_gradual.sh
+push_gradual.log

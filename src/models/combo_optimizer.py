@@ -59,11 +59,24 @@ def run_combo_optimization(
             "data": {"total_transactions": total_transactions, "unique_items": len(te.columns_), "rules_found": 0},
         }
 
-    rules = rules.sort_values("lift", ascending=False).head(top_n)
+    rules = rules.sort_values("lift", ascending=False)
+
+    # Deduplicate by normalized sorted itemset key before top_n truncation.
+    # Apriori produces A->B and B->A as separate rules; after merging
+    # antecedents+consequents they look identical in the output.
+    seen_itemsets: set[frozenset] = set()
+    deduped_rows = []
+    for _, row in rules.iterrows():
+        itemset = frozenset(row["antecedents"] | row["consequents"])
+        if itemset not in seen_itemsets:
+            seen_itemsets.add(itemset)
+            deduped_rows.append(row)
+        if len(deduped_rows) >= top_n:
+            break
 
     scores = []
-    for _, row in rules.iterrows():
-        items = list(row["antecedents"] | row["consequents"])
+    for row in deduped_rows:
+        items = sorted(row["antecedents"] | row["consequents"])
         scores.append({
             "items": items,
             "support": round(float(row["support"]), 4),
@@ -85,6 +98,6 @@ def run_combo_optimization(
         "data": {
             "total_transactions": total_transactions,
             "unique_items": len(te.columns_),
-            "rules_found": len(rules),
+            "rules_found": len(deduped_rows),
         },
     }

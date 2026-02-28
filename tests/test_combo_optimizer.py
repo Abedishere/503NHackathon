@@ -26,3 +26,18 @@ class TestComboOptimizer:
             assert "items" in score
             assert len(score["items"]) >= 2
             assert "lift" in score
+
+    def test_no_duplicate_itemsets(self, sales_data):
+        """Each unique sorted itemset must appear only once in the top-N results (audit 4.5 fix)."""
+        result = run_combo_optimization(sales_data, min_support=0.01, min_lift=1.0, top_n=10)
+        seen = set()
+        for score in result["scores"]:
+            key = frozenset(score["items"])
+            assert key not in seen, f"Duplicate itemset in combo scores: {score['items']}"
+            seen.add(key)
+
+    def test_actions_not_duplicated(self, sales_data):
+        """Top-3 actions must all be distinct (audit 4.5 observable consequence fix)."""
+        result = run_combo_optimization(sales_data, min_support=0.01, min_lift=1.0, top_n=10)
+        actions = result["actions"]
+        assert len(actions) == len(set(actions)), f"Duplicate actions found: {actions}"

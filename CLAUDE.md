@@ -13,24 +13,21 @@ All persistent memory lives in `.orchestrator/`:
 Check these before making architectural changes or debugging known issues.
 Run `/init` to have Qwen populate them from the codebase if they are empty.
 
-- Project goal: deliver an end-to-end **Chief of Operations AI agent** for Conut’s scaled operational dataset, covering five required objectives: combo optimization, branch-level demand forecasting, expansion feasibility, shift staffing estimation, and coffee/milkshake growth strategy.
-- Mandatory constraint: **OpenClaw integration must work in practice** (not conceptual). Treat integration as a graded deliverable equal to modeling quality.
-- Data location convention: source files currently exist at repo root in `Conut bakery Scaled Data/`. Do not hardcode a different default path (e.g., `data/raw/...`) unless created via an explicit reproducible target.
-- Parsing strategy decision: these CSVs are **report exports**, not clean tabular files. Use **per-report parsers** (file-specific logic), not one generic parser.
-- Known parsing hazards to handle explicitly:
-  - Repeated headers and page markers (`Page X of Y`) mid-file.
-  - Inline section markers (branch/customer/employee blocks).
-  - Subtotal/`Total :` rows mixed with records.
-  - Quoted comma-formatted numerics (e.g., `"1,251,486.48"`).
-- Critical file note: `REP_S_00461.csv` (attendance) is positional and headerless with punch-in/out pairs plus page/section breaks; infer schema by column positions and block context.
-- Basket mining rule for `REP_S_00502.csv`: handle cancellations/returns by **netting quantities per customer-order-item**, then drop zero-net lines before basket construction. Do not simply delete negative rows.
-- Scope mapping decision: include `rep_s_00150.csv` features (recency/frequency/spend/order counts) in both:
-  - expansion feasibility signals, and
-  - coffee/milkshake growth segmentation.
-- Delivery/reproducibility conventions:
-  - Build tests in parallel with implementation, not as a final phase.
-  - Add missing package `__init__.py` files where needed.
-  - Keep binary artifacts out mandatory repo file list; generate PDF via tooling and capture demo evidence manually.
-- Toolchain decision: define explicit PDF generation path (`pandoc` or `weasyprint`) and expose `make pdf`.
-- Sequencing decision: research and lock OpenClaw contract early, but do **not** block core data/model pipeline work (ingestion through analytics) on integration discovery.
-- Docker sequencing: create containerization after core runnable code paths are established, then freeze for reproducibility.
+- Project objective: deliver an end-to-end Conut Chief of Operations AI system covering 5 graded objectives: combo optimization, branch-level demand forecasting, expansion feasibility, shift staffing estimation, and coffee/milkshake growth strategy.
+- Grading-critical requirement: OpenClaw integration must be live and demonstrable (actual callable queries plus logs/screenshots/video evidence), not only `SKILL.md` presence.
+- Canonical architecture reference: consult `orchestrator.md` before major changes; treat `.orchestrator/` (`bugs.md`, `decisions.md`, `key_facts.md`, `issues.md`, `memory.yaml`) as authoritative persistent memory.
+- Raw data convention: source inputs come from repo-root `Conut bakery Scaled Data/`; do not assume `data/raw/...` unless created via reproducible copy/symlink logic.
+- Parsing architecture decision: use file-specific parsers for report-style CSV exports; generic CSV parsing is an anti-pattern for this dataset.
+- Parsing hazards to handle explicitly: repeated headers, page markers (`Page X of Y`), section markers, subtotal/`Total :` rows, unstable headers, and quoted/comma-formatted numerics.
+- Critical parser rules:
+  - `REP_S_00461.csv` (attendance): parse by column position + section state; recover main `Conut` branch coverage.
+  - `REP_S_00502.csv` (sales detail): preserve branch coverage including `Conut`; basket mining must net quantities by customer-order-item, then drop zero-net items.
+  - `rep_s_00150.csv` (customer orders): carry branch context across page/section boundaries; avoid silent `branch=None` loss and flag unattributed rows.
+- Modeling guidance: data is scaled/anonymized; optimize for relative patterns, rankings, ratios, and directional comparisons over absolute magnitudes.
+- Shared time-series fix is mandatory: exclude anomalous trailing partial periods from slope/trend computation (primary fix), then apply non-negative forecast clamping as defensive fallback.
+- Trend/forecast quality requirement: avoid physically invalid negative demand and avoid global false “decreasing” labels caused by partial-month artifacts.
+- Combo output requirement: deduplicate merged item-set recommendations before top-N selection so directional rule duplicates do not leak to API responses.
+- Required implementation scope: parsers/cleaning/validation, shared time-series utility, demand/expansion/staffing/combo model layers, logging encoding fix, OpenClaw tool checks, docs/tests/validation artifacts.
+- Tooling/repro standards: pinned dependencies, executable pipeline, clear runbook, tests alongside implementation, and explicit PDF toolchain with `make pdf`.
+- Validation workflow: run pipeline, model scripts, full pytest (+ JUnit/logs), smoke/API/OpenClaw checks, and consolidated report under `artifacts/` and `artifacts/test_logs/`; if Docker unavailable, record “Docker not available — skipped.”
+- Current priority: close all 9 audit issues (4.8 accepted as non-blocking if executive PDF is pre-generated), with remediation order: parser correctness -> cleaning/validation -> shared utilities -> model fixes -> tests -> OpenClaw live proof -> docs/evidence -> full validation rerun.

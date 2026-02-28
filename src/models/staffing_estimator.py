@@ -71,7 +71,9 @@ def run_staffing_estimation(
                 "avg_hours_per_shift": round(float(row["avg_hours"]), 1),
             })
 
-        scores.append({"branch": b, "shifts": shifts})
+        b_row = metrics[metrics["branch"] == b].iloc[0] if not b_metrics.empty else None
+        is_estimated = bool(b_row.get("_estimated", False)) if b_row is not None else False
+        scores.append({"branch": b, "shifts": shifts, "data_source": "estimated" if is_estimated else "attendance"})
 
     actions = []
     for s in scores:

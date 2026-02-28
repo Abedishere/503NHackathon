@@ -1,58 +1,68 @@
 # Task
 
-run the tests run everything make sure everything is working and test it rigurisly then make me a report of all you did and if everything is working well or not
+file:/C:/Users/Abed%20Al-Rahman/Desktop/AUB%20STUFF/503N%20Hackathon/AUDIT_REPORT.md i want you through this refrence file, to fix what is broken according to my personal testing
 
 # Implementation Plan
-
-Good. The repo has all key components in place. Here's my verdict:
 
 ---
 
 **APPROVED**
 
-The plan is solid and well-ordered. All required files, scripts, tests, data, and infrastructure exist in the repo to execute every step. Two minor notes (not blockers):
+The plan correctly maps to all 9 audit issues (4.8/weasyprint is acceptably out-of-scope since the PDF is pre-generated). Build order is correct — parsers first, then cleaning, then shared utilities, then model-layer fixes, then tests, then OpenClaw, then docs, then final validation. No circular dependencies, no missing files, and the technical decisions align with CLAUDE.md conventions.
 
-1. **Step 10 (PDF generation)** depends on `weasyprint` being installed. The Makefile uses `weasyprint` via Python. Ensure `requirements.txt` includes it, or the developer should note this dependency if the step fails and install it manually.
-2. **Step 9 (Docker checks)** may require Docker Desktop running on Windows. If Docker is not available on the test machine, the developer should log "Docker not available — skipped" rather than treating it as a blocking failure for the overall validation report.
+One advisory note (not blocking): Step 3's partial-period heuristic is the linchpin fix for both audit 4.2 (negative forecasts) and 4.7 (all-decreasing trends). The implementer should ensure it **excludes** anomalous trailing months from trend/slope computation — not just clamp the output after the fact. The clamping in step 4 is a correct defensive layer, but partial-period exclusion is the primary fix.
 
-Neither of these warrants changing the plan — they're execution-time considerations the developer should handle gracefully. The stage gating, log capture strategy, artifact validation, and coverage of all 5 business objectives + OpenClaw integration are all correct.
+---
 
-### Plan (as-is):
+1. **Files to create/modify**
 
-1. **Files to create/modify (exact paths)**
-- `docs/validation/test_run_report.md` (create)
-- `artifacts/validation_report.json` (generated/overwrite via pipeline)
-- `artifacts/combo_result.json` (generated/overwrite)
-- `artifacts/demand_result.json` (generated/overwrite)
-- `artifacts/expansion_result.json` (generated/overwrite)
-- `artifacts/staffing_result.json` (generated/overwrite)
-- `artifacts/growth_result.json` (generated/overwrite)
-- `artifacts/test_logs/pipeline.log` (create)
-- `artifacts/test_logs/train.log` (create)
-- `artifacts/test_logs/pytest.log` (create)
-- `artifacts/test_logs/pytest-junit.xml` (create)
-- `artifacts/test_logs/smoke.log` (create)
-- `artifacts/test_logs/api_checks.log` (create)
-- `artifacts/test_logs/openclaw_checks.log` (create)
-- `artifacts/test_logs/docker_checks.log` (create)
+- **Modify** `src/data/ingest_reports.py`
+- **Modify** `src/data/clean_reports.py`
+- **Modify** `src/data/validate.py`
+- **Create** `src/features/time_series_utils.py`
+- **Modify** `src/features/demand_features.py`
+- **Modify** `src/features/expansion_features.py`
+- **Modify** `src/features/staffing_features.py`
+- **Modify** `src/models/demand_forecaster.py`
+- **Modify** `src/models/combo_optimizer.py`
+- **Modify** `src/models/expansion_feasibility.py`
+- **Modify** `src/utils/logging.py`
+- **Modify** `src/integrations/openclaw_tool.py`
+- **Create** `scripts/check_openclaw_live.py`
+- **Modify** `Makefile`
+- **Modify** `tests/test_ingestion_cleaning.py`
+- **Modify** `tests/test_combo_optimizer.py`
+- **Modify** `tests/test_demand_forecaster.py`
+- **Modify** `tests/test_expansion_feasibility.py`
+- **Modify** `tests/test_staffing_estimator.py`
+- **Modify** `tests/test_openclaw_integration.py`
+- **Modify** `README.md`
+- **Modify** `docs/openclaw-integration.md`
+- **Create** `docs/evidence/README.md`
+- **Modify** `docs/validation/test_run_report.md`
 
 2. **Step-by-step build order**
-   1. Validate repo root and required input data exists at `Conut bakery Scaled Data/` with all 9 CSVs listed in `CONUT_AI_ENGINEERING_HACKATHON.md`.
-   2. Create/activate a clean Python environment, then run `pip install -r requirements.txt`.
-   3. Run data pipeline with logging: `python scripts/run_pipeline.py` and save full console output to `artifacts/test_logs/pipeline.log`.
-   4. Run model execution with logging: `python scripts/train_models.py` and save output to `artifacts/test_logs/train.log`.
-   5. Run full automated tests: `pytest tests/ -v --junitxml=artifacts/test_logs/pytest-junit.xml` and save output to `artifacts/test_logs/pytest.log`.
-   6. Run end-to-end smoke test: `python scripts/demo_smoke_test.py` and save output to `artifacts/test_logs/smoke.log`.
-   7. Start API (`uvicorn src.api.main:app --host 127.0.0.1 --port 8000`) and run explicit checks for `/health`, `/combo`, `/demand`, `/expansion`, `/staffing`, `/growth`; save requests/responses to `artifacts/test_logs/api_checks.log`.
-   8. Validate OpenClaw integration path by running `python scripts/generate_recommendations.py`, confirming `skills/conut-ops/SKILL.md` endpoint coverage, and running `pytest tests/test_openclaw_integration.py -v`; save evidence to `artifacts/test_logs/openclaw_checks.log`.
-   9. Run container reproducibility checks: `make docker-build` then `docker compose -f docker/docker-compose.yml up` smoke verification; save output to `artifacts/test_logs/docker_checks.log`.
-   10. Run PDF deliverable generation with `make pdf` and confirm `docs/executive_brief.pdf` is produced.
-   11. Write consolidated status report in `docs/validation/test_run_report.md` including command list, pass/fail per stage, failing stack traces (if any), artifact paths, and final verdict on whether the system is fully working.
+
+1. Fix parser correctness in `ingest_reports.py` for quoted numerics, unstable headers/sections, branch carry-over, and customer row variants in `REP_S_00461.csv`, `REP_S_00502.csv`, and `rep_s_00150.csv`.
+2. Tighten cleaning/validation in `clean_reports.py` and `validate.py` to enforce branch coverage, flag unattributed rows, and preserve usable records.
+3. Implement one shared partial-period utility in `time_series_utils.py`, then wire it into `demand_features.py` and `expansion_features.py`.
+4. Apply model-layer fixes: deduplicate combo itemsets (`combo_optimizer.py`), clamp demand outputs at boundary (`demand_forecaster.py`), and add expansion defensive trend guard (`expansion_feasibility.py`).
+5. Fix log encoding artifact in `logging.py` and normalize action text to ASCII-safe output where needed.
+6. Update and extend tests for parser branch coverage, non-negative demand bounds, combo deduplication, expansion trend behavior, staffing branch completeness, and OpenClaw contract/live checks.
+7. Implement OpenClaw demonstrability: enhance `openclaw_tool.py`, add env-gated live probe script `check_openclaw_live.py`, and expose a `make` target.
+8. Update docs (`README.md`, `openclaw-integration.md`, `docs/evidence/README.md`) with exact reproducible OpenClaw runbook and evidence capture requirements.
+9. Run full validation sequence and update `docs/validation/test_run_report.md` with truthful pass/fail/skip states, log paths, and evidence inventory.
 
 3. **Key technical decisions**
-- Use repo-root data convention only (`Conut bakery Scaled Data/`) as the single source of truth; do not copy data into `data/raw/...`.
-- Enforce strict stage gating: pipeline must pass before training, training before tests, tests before API/OpenClaw checks.
-- Treat "working" as evidence-backed: no stage is considered complete without persisted logs and generated artifacts.
-- Validate all five business objectives both through automated tests and live API endpoint calls.
-- Validate OpenClaw integration as mandatory grading requirement with concrete execution evidence, not documentation-only claims.
-- Keep execution reproducible through pinned dependencies (`requirements.txt`) and Make/script commands already defined in the repo.
+
+- Use file-specific, stateful parsers; no generic CSV parser abstraction for these reports.
+- Parse quoted comma-formatted numbers with a CSV-safe tokenizer before numeric conversion.
+- For `REP_S_00461.csv`, parse by column position + section state (employee block + branch block), not header-name matching.
+- For `REP_S_00502.csv`, keep netting rule by `branch + customer + item`, drop only zero-net items, and robustly parse customer IDs including prefixed formats.
+- For `rep_s_00150.csv`, persist branch context across repeated page headers and variable column offsets to reduce `branch=None`.
+- Shared partial-period heuristic is single-source-of-truth and reused by both demand and expansion feature layers. **Primary role: exclude anomalous trailing partial months from trend/slope computation before modeling.**
+- Demand boundary validity is mandatory: clamp `predicted >= 0` and `lower >= 0` in final API output. **(Defensive layer, not primary fix.)**
+- Expansion trend logic is dual-layer: primary fix in feature computation plus defensive fallback in model assembly.
+- Combo outputs are deduplicated by normalized sorted itemset key before `top_n` truncation.
+- OpenClaw acceptance requires three proofs: contract tests, env-gated live invocation test, and captured screenshots in `docs/evidence/`.
+- Encoding fix for audit 4.9 is explicit: ASCII `--` in action strings and UTF-8-safe logging stream configuration.
