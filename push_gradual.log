@@ -65,3 +65,83 @@ To https://github.com/Abedishere/503NHackathon.git
    1a5602a..f5f5ee8  main -> main
 [11:59:53]    ✓ Pushed.
 [11:59:53]    Sleeping 342s …
+
+[12:05:36] ── Add orchestrator memory files  (5 file(s)) ──
+[main e6496a3] Add orchestrator memory files
+ 73 files changed, 9674 insertions(+), 8 deletions(-)
+ create mode 100644 .idea/.gitignore
+ create mode 100644 .idea/503N Hackathon.iml
+ create mode 100644 .idea/inspectionProfiles/profiles_settings.xml
+ create mode 100644 .idea/misc.xml
+ create mode 100644 .idea/modules.xml
+ create mode 100644 .idea/vcs.xml
+ create mode 100644 .orchestrator/bugs.md
+ create mode 100644 .orchestrator/decisions.md
+ create mode 100644 .orchestrator/history.md
+ create mode 100644 .orchestrator/issues.md
+ create mode 100644 .orchestrator/key_facts.md
+ create mode 100644 .orchestrator/memory.yaml
+ create mode 100644 .orchestrator/plan.md
+ create mode 100644 .orchestrator/sessions/7d6447f1.json
+ create mode 100644 .orchestrator/sessions/8c829d70.json
+ create mode 100644 .orchestrator/transcript_20260228_095859.log
+ create mode 100644 .orchestrator/transcript_20260228_115234.log
+ create mode 100644 Conut bakery Scaled Data/REP_S_00136_SMRY.csv
+ create mode 100644 Conut bakery Scaled Data/REP_S_00194_SMRY.csv
+ create mode 100644 Conut bakery Scaled Data/REP_S_00461.csv
+ create mode 100644 Conut bakery Scaled Data/REP_S_00502.csv
+ create mode 100644 Conut bakery Scaled Data/rep_s_00150.csv
+ create mode 100644 Conut bakery Scaled Data/rep_s_00191_SMRY.csv
+ create mode 100644 Conut bakery Scaled Data/rep_s_00334_1_SMRY.csv
+ create mode 100644 Conut bakery Scaled Data/rep_s_00435_SMRY (1).csv
+ create mode 100644 Conut bakery Scaled Data/rep_s_00435_SMRY.csv
+ create mode 100644 docker/Dockerfile.api
+ create mode 100644 docker/docker-compose.yml
+ create mode 100644 docs/executive_brief.pdf
+ create mode 100644 docs/validation/test_run_report.md
+ create mode 100644 push_gradual.log
+ create mode 100644 push_gradual.sh
+ create mode 100644 scripts/demo_smoke_test.py
+ create mode 100644 scripts/generate_recommendations.py
+ create mode 100644 scripts/run_pipeline.py
+ create mode 100644 scripts/train_models.py
+ create mode 100644 src/__init__.py
+ create mode 100644 src/api/__init__.py
+ create mode 100644 src/api/main.py
+ create mode 100644 src/api/schemas.py
+ create mode 100644 src/config.py
+ create mode 100644 src/data/__init__.py
+ create mode 100644 src/data/clean_reports.py
+ create mode 100644 src/data/ingest_reports.py
+ create mode 100644 src/data/validate.py
+ create mode 100644 src/features/__init__.py
+ create mode 100644 src/features/combo_features.py
+ create mode 100644 src/features/demand_features.py
+ create mode 100644 src/features/expansion_features.py
+ create mode 100644 src/features/growth_features.py
+ create mode 100644 src/features/staffing_features.py
+ create mode 100644 src/integrations/__init__.py
+ create mode 100644 src/integrations/openclaw_tool.py
+ create mode 100644 src/models/__init__.py
+ create mode 100644 src/models/combo_optimizer.py
+ create mode 100644 src/models/demand_forecaster.py
+ create mode 100644 src/models/expansion_feasibility.py
+ create mode 100644 src/models/growth_strategy.py
+ create mode 100644 src/models/staffing_estimator.py
+ create mode 100644 src/services/__init__.py
+ create mode 100644 src/services/operations_agent.py
+ create mode 100644 src/utils/__init__.py
+ create mode 100644 src/utils/logging.py
+ create mode 100644 tests/__init__.py
+ create mode 100644 tests/test_api_endpoints.py
+ create mode 100644 tests/test_combo_optimizer.py
+ create mode 100644 tests/test_demand_forecaster.py
+ create mode 100644 tests/test_expansion_feasibility.py
+ create mode 100644 tests/test_growth_strategy.py
+ create mode 100644 tests/test_ingestion_cleaning.py
+ create mode 100644 tests/test_openclaw_integration.py
+ create mode 100644 tests/test_staffing_estimator.py
+To https://github.com/Abedishere/503NHackathon.git
+   f5f5ee8..e6496a3  main -> main
+[12:05:47]    ✓ Pushed.
+[12:05:47]    Sleeping 570s …

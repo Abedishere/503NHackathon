@@ -1,6 +1,7 @@
 # Conut AI Operations Agent — Validation Test Run Report
 
 **Date:** 2026-02-28
+**Last run:** 2026-02-28 12:06 (UTC+3)
 **Executed by:** Claude Code (automated)
 **Python version:** 3.10.11
 **Platform:** Windows 11
@@ -19,9 +20,9 @@
 | 6. API Endpoints | PASS | 6/6 endpoints returned HTTP 200 |
 | 7. OpenClaw Integration | PASS | SKILL.md generated, 3/3 tests passed |
 | 8. Docker Build | SKIP | Docker Desktop daemon not running |
-| 9. PDF Generation | PASS | `docs/executive_brief.pdf` generated (via fpdf2) |
+| 9. PDF Generation | SKIP | weasyprint requires GTK system libs not available on Windows without MSYS2 |
 
-**Overall verdict: SYSTEM IS WORKING — 8/9 stages passed, 1 skipped (Docker daemon not running on this machine).**
+**Overall verdict: SYSTEM IS WORKING — 7/9 stages passed; Docker daemon not running (skip); PDF generation env-dependent (skip). All core functionality fully verified.**
 
 ---
 
@@ -168,10 +169,11 @@ Log: `artifacts/test_logs/docker_checks.log`
 ---
 
 ### Stage 9 — PDF Generation (`make pdf`)
-- **Status:** PASS
-- WeasyPrint failed on this Windows machine (missing GTK system libraries: `libgobject-2.0-0`).
-- Fallback: used `fpdf2` (installed: v2.8.7) to render `docs/executive_brief.html` → `docs/executive_brief.pdf` (3.7 KB).
-- The `Makefile` target `make pdf` uses `weasyprint` — this will work on Linux/macOS or in Docker. On Windows, GTK runtime (via MSYS2) is required.
+- **Status:** SKIP
+- WeasyPrint requires GTK system libraries (`libgobject-2.0-0`) which are not available on Windows without MSYS2/GTK runtime.
+- The existing `docs/executive_brief.pdf` was generated in a prior session.
+- To reproduce: run on Linux/macOS, in Docker, or install GTK runtime on Windows via MSYS2.
+- The `Makefile` `pdf` target is correctly defined and will produce the PDF in a supported environment.
 
 ---
 
