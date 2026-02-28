@@ -1,4 +1,4 @@
-.PHONY: install pipeline api test docker-build docker-run pdf smoke all clean
+.PHONY: install pipeline api dashboard test docker-build docker-run pdf smoke all clean
 
 install:
 	pip install -r requirements.txt
@@ -12,6 +12,9 @@ train:
 api:
 	uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 
+dashboard:
+	streamlit run eda/app/Home.py --server.port=8501
+
 test:
 	pytest tests/ -v
 
@@ -22,7 +25,7 @@ pdf:
 	python -c "import weasyprint; weasyprint.HTML(filename='docs/executive_brief.html').write_pdf('docs/executive_brief.pdf')"
 
 docker-build:
-	docker build -f docker/Dockerfile.api -t conut-ops-agent .
+	docker compose -f docker/docker-compose.yml build
 
 docker-run:
 	docker compose -f docker/docker-compose.yml up

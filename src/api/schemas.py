@@ -30,7 +30,7 @@ class GrowthRequest(BaseModel):
     category: str = Field("all", pattern="^(all|coffee|milkshake)$")
 
 
-# ---------- Response schema ----------
+# ---------- Response schemas ----------
 
 class OperationsResponse(BaseModel):
     objective: str
@@ -39,3 +39,10 @@ class OperationsResponse(BaseModel):
     confidence: float
     actions: List[str]
     data: Optional[dict] = None
+
+
+class EDATableResponse(BaseModel):
+    table: str
+    branch: str
+    rows: List[Any]
+    count: int

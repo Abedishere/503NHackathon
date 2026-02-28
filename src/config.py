@@ -9,6 +9,7 @@ load_dotenv()
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "Conut bakery Scaled Data"
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
+EDA_TABLES_DIR = PROJECT_ROOT / "eda" / "outputs" / "tables"
 ARTIFACTS_DIR.mkdir(exist_ok=True)
 
 # API settings
