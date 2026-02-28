@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Conut Operations Agent — Executive Brief</title>
+<style>
+body { font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #333; }
+h1 { font-size: 24px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+h2 { font-size: 18px; margin-top: 24px; color: #555; }
+table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; font-size: 14px; }
+th { background: #f5f5f5; }
+.metric { font-weight: bold; color: #2a6; }
+.warning { color: #c50; }
+ul { margin: 8px 0; }
+.footer { margin-top: 30px; font-size: 12px; color: #888; border-top: 1px solid #ddd; padding-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Conut AI Operations Agent — Executive Brief</h1>
+<p><strong>Date:</strong> February 2026 | <strong>Prepared for:</strong> Conut Management | <strong>Data Period:</strong> Aug–Dec 2025</p>
+
+<h2>1. Problem Framing</h2>
+<p>Conut operates 4 branches (Conut, Conut - Tyre, Conut Jnah, Main Street Coffee) selling specialty chimneys, conuts, beverages, and desserts. Operational decisions—product bundling, inventory, staffing, expansion, and category growth—are currently made without systematic data analysis. This project delivers an AI-powered decision-support system that converts transactional data into actionable business intelligence accessible through any messaging platform via OpenClaw.</p>
+
+<h2>2. Top Findings</h2>
+
+<table>
+<tr><th>Objective</th><th>Key Finding</th><th>Confidence</th></tr>
+<tr><td>Combo Optimization</td><td>Classic Chimney + Conut The One + Chimney The One are the highest-affinity bundle (lift >50x). 113 multi-item baskets analyzed with Apriori association mining.</td><td class="metric">0.85</td></tr>
+<tr><td>Demand Forecasting</td><td>All 4 branches show <span class="warning">declining trends</span> in recent months. Conut Jnah has the highest absolute revenue but also the steepest December spike (potentially seasonal).</td><td class="metric">0.68</td></tr>
+<tr><td>Expansion Feasibility</td><td>Conut Jnah scores highest (0.67) on composite health metrics. Expansion is feasible at <em>moderate</em> risk tolerance. Strong customer base but limited repeat-purchase data.</td><td class="metric">0.70</td></tr>
+<tr><td>Staffing</td><td>Conut - Tyre is overstaffed on evening shifts; Conut Jnah is understaffed on both morning and evening. Main Street Coffee has evening overstaffing.</td><td class="metric">0.70</td></tr>
+<tr><td>Growth Strategy</td><td>Coffee (5% share) and milkshakes (7% share) both have <span class="metric">high growth potential</span>. Cross-sell with chimney products (top co-purchase items).</td><td class="metric">0.70</td></tr>
+</table>
+
+<h2>3. Recommended Actions</h2>
+<ul>
+<li><strong>Immediate:</strong> Launch a "Classic Chimney + Conut The One" combo deal at a 10% bundle discount.</li>
+<li><strong>Immediate:</strong> Rebalance staffing — shift 1-2 evening staff from Conut - Tyre and Main Street Coffee to morning/evening at Conut Jnah.</li>
+<li><strong>Short-term:</strong> Test an afternoon milkshake promotion (2–5 PM) to grow the milkshake category.</li>
+<li><strong>Short-term:</strong> Introduce a coffee loyalty card targeting repeat customers to grow the 5% coffee revenue share.</li>
+<li><strong>Medium-term:</strong> Conduct foot-traffic study near Conut Jnah for potential 5th branch location.</li>
+<li><strong>Medium-term:</strong> Increase inventory planning horizon using the demand forecast API ahead of seasonal spikes.</li>
+</ul>
+
+<h2>4. Expected Impact & Risks</h2>
+<table>
+<tr><th>Action</th><th>Expected Impact</th><th>Risk</th></tr>
+<tr><td>Combo bundling</td><td>+8–15% basket size on bundled items</td><td>Low — proven association patterns</td></tr>
+<tr><td>Staffing rebalance</td><td>Labor cost savings + better service at Conut Jnah</td><td>Low — based on actual attendance data</td></tr>
+<tr><td>Coffee/milkshake promotions</td><td>Grow combined share from 12% to 18–20%</td><td>Moderate — requires execution quality</td></tr>
+<tr><td>Expansion</td><td>Revenue from 5th branch</td><td>High — limited data (5 months), needs field validation</td></tr>
+</table>
+
+<p><strong>Key limitation:</strong> All numeric values are scaled/arbitrary. Recommendations are based on <em>patterns, ratios, and relative comparisons</em>—not absolute figures. With only 5 months of data, seasonal decomposition is not possible; forecasts should be updated as more data accumulates.</p>
+
+<div class="footer">
+Conut AI Operations Agent | Built with Python, FastAPI, scikit-learn, mlxtend, statsmodels | Integrated with OpenClaw<br>
+American University of Beirut — AI Engineering Hackathon 2026
+</div>
+
+</body>
+</html>
