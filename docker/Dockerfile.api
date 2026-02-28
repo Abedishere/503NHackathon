@@ -7,9 +7,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/ src/
 COPY scripts/ scripts/
+COPY eda/ eda/
 COPY "Conut bakery Scaled Data/" "Conut bakery Scaled Data/"
 COPY skills/ skills/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run EDA pipeline to generate eda/outputs/tables/*.csv, then start API
+CMD ["sh", "-c", "python -m eda.scripts.run_eda && uvicorn src.api.main:app --host 0.0.0.0 --port 8000"]
