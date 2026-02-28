@@ -222,33 +222,53 @@ Session transcripts: `~/.openclaw/agents/main/sessions/*.jsonl`
 
 All screenshots captured 2026-02-28 from the live running system.
 
-### screenshot_03_openclaw_gateway_responses.png
-**Gateway acceptance proof** — Notepad showing live Python submission script output.
-All 5 `POST /hooks/agent` calls returned `{"ok":true}` with distinct RunIds:
+### 1 — Gateway Acceptance (5/5 PASS)
+
+**Gateway acceptance proof** — Live Python submission script output showing all 5
+`POST /hooks/agent` calls returning `{"ok":true}` with distinct RunIds:
 - Combo Optimization → `1832532a-d2d0-4c85-8feb-fba8ce17dc6b`
 - Demand Forecasting → `0150daff-57f3-451b-add8-2264557d344e`
 - Expansion Feasibility → `31f063ef-95eb-4573-b8d4-261ccd750029`
 - Shift Staffing → `2af12678-ee6f-49cf-8bbd-0d125d0dbc08`
 - Growth Strategy → `ad100d47-0932-4b9e-a390-9d2dc9446539`
 
-### screenshot_04_openclaw_control_browser.png
-**OpenClaw Gateway Dashboard (Chat page)** — Browser at `127.0.0.1:18789/chat`.
-Shows live combo optimization results in the chat: Berry Duo Power Combo (28.25x lift),
-Strawberry Cream Chimney Set (25.11x lift), Berry Bites Trio (22.60x lift).
-Gateway header shows **Health: OK**.
+![Gateway acceptance — 5/5 PASS with RunIds](screenshot_03_openclaw_gateway_responses.png)
 
-### screenshot_05_openclaw_sessions.png
-**Sessions page** — Browser at `127.0.0.1:18789/sessions`.
-Shows `agent:main:main` (heartbeat) and multiple `agent:main:hook:*` sessions
-created 2 minutes ago — these are the hook-submitted agent jobs from the 5 tests.
+---
+
+### 2 — OpenClaw Gateway Dashboard (Chat with Live Results)
+
+**Browser at `127.0.0.1:18789/chat`** — Shows live combo optimization results
+delivered by the agent: Berry Duo Power Combo (28.25x lift), Strawberry Cream
+Chimney Set (25.11x lift), Berry Bites Trio (22.60x lift). Gateway header shows
+**Health: OK**.
+
+![OpenClaw Gateway Dashboard — live combo results](screenshot_04_openclaw_control_browser.png)
+
+---
+
+### 3 — Sessions Page (Hook Sessions from the 5 Tests)
+
+**Browser at `127.0.0.1:18789/sessions`** — Shows `agent:main:main` (heartbeat)
+and multiple `agent:main:hook:*` sessions created during the 5 test runs.
 Each session shows real token usage (10,000–12,000 / 272,000 tokens consumed).
 
-### screenshot_06_openclaw_skills_conut.png
-**Skills page with "conut" filter** — Browser at `127.0.0.1:18789/skills`.
-Filter "conut" → **1 shown**, WORKSPACE SKILLS section shows 1 match.
-Confirms `conut-ops` is installed as the only matching workspace skill.
+![Sessions page — hook agent sessions from live tests](screenshot_05_openclaw_sessions.png)
 
-### screenshot_07_openclaw_overview.png
-**Overview page** — Browser at `127.0.0.1:18789/overview`.
-Shows: Status **OK**, Uptime **33m**, **Sessions: 22** (session keys tracked),
-Instances: 2. WebSocket URL `ws://127.0.0.1:18789` with gateway token visible.
+---
+
+### 4 — Skills Page (conut-ops Workspace Skill Installed)
+
+**Browser at `127.0.0.1:18789/skills`** — Filter "conut" → **1 shown**,
+WORKSPACE SKILLS section confirms `conut-ops` is the installed workspace skill.
+
+![Skills page — conut-ops workspace skill confirmed](screenshot_06_openclaw_skills_conut.png)
+
+---
+
+### 5 — Overview Page (Gateway Health + Session Count)
+
+**Browser at `127.0.0.1:18789/overview`** — Status **OK**, Uptime **33m**,
+**Sessions: 22** session keys tracked, Instances: 2.
+
+![Overview page — gateway status OK, 22 sessions](screenshot_07_openclaw_overview.png)
