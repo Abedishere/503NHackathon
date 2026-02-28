@@ -152,6 +152,33 @@ Log: `artifacts/test_logs/api_checks.log`
 
 Log: `artifacts/test_logs/openclaw_checks.log`
 
+**Screenshot Evidence:**
+
+#### Gateway Acceptance — 5/5 PASS with RunIds
+All 5 objectives accepted by OpenClaw gateway (`ok:true`) with distinct RunIds:
+
+![Gateway acceptance — 5/5 PASS with RunIds](../evidence/screenshot_03_openclaw_gateway_responses.png)
+
+#### Live Agent Response in Dashboard Chat
+OpenClaw chat at `127.0.0.1:18789/chat` showing live combo optimization results delivered by the `conut-ops` agent (Berry Duo Power Combo 28.25x, Strawberry Cream Chimney Set 25.11x, Berry Bites Trio 22.60x):
+
+![OpenClaw Gateway Dashboard — live combo results](../evidence/screenshot_04_openclaw_control_browser.png)
+
+#### Active Hook Sessions from the 5 Test Runs
+Sessions page at `127.0.0.1:18789/sessions` showing `agent:main:main` (heartbeat) plus multiple `agent:main:hook:*` sessions created during the 5 live test runs, each consuming 10,000–12,000 / 272,000 tokens:
+
+![Sessions page — hook agent sessions from live tests](../evidence/screenshot_05_openclaw_sessions.png)
+
+#### conut-ops Workspace Skill Installed
+Skills page filtered to "conut" → **1 shown** — confirms `conut-ops` is registered as an `openclaw-workspace` skill with status **eligible**:
+
+![Skills page — conut-ops workspace skill confirmed](../evidence/screenshot_06_openclaw_skills_conut.png)
+
+#### Gateway Overview — Status OK
+Overview page at `127.0.0.1:18789/overview` — Status **OK**, Uptime **33m**, **Sessions: 22**, Instances: 2:
+
+![Overview page — gateway status OK, 22 sessions](../evidence/screenshot_07_openclaw_overview.png)
+
 ---
 
 ### Stage 8 — Docker Build
