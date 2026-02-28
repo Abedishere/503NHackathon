@@ -2,6 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# System libs required by weasyprint (HTML→PDF)
+RUN apt-get update -qq && apt-get install -y -qq \
+    libpango-1.0-0 libpangoft2-1.0-0 libgobject-2.0-0 libcairo2 shared-mime-info \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -9,7 +14,8 @@ COPY src/ src/
 COPY scripts/ scripts/
 COPY ["Conut bakery Scaled Data/", "Conut bakery Scaled Data/"]
 COPY skills/ skills/
+COPY eda/ eda/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "python -m eda.scripts.run_eda && uvicorn src.api.main:app --host 0.0.0.0 --port 8000"]

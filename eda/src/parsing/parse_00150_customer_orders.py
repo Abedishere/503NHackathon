@@ -53,13 +53,18 @@ def parse_customer_orders(path: Path) -> pd.DataFrame:
             total = to_float_money(r.iloc[7] if len(r) > 7 else None)
             n_orders = to_float(r.iloc[8] if len(r) > 8 else None)
 
+            # Strip trailing colon from datetime strings (e.g. "2025-12-31 19:04:")
+            def _parse_dt(val):
+                if isinstance(val, str):
+                    val = val.strip().rstrip(":")
+                return pd.to_datetime(val, errors="coerce", format="mixed")
+
             rows.append({
                 "branch": branch,
                 "customer": customer,
                 "phone": str(phone).strip() if isinstance(phone, str) else None,
-                # Robust datetime parse for report exports
-                "first_order_dt": pd.to_datetime(first_order, errors="coerce", dayfirst=True),
-                "last_order_dt": pd.to_datetime(last_order, errors="coerce", dayfirst=True),
+                "first_order_dt": _parse_dt(first_order),
+                "last_order_dt": _parse_dt(last_order),
                 "total_spend": float(total) if pd.notna(total) else 0.0,
                 "orders": float(n_orders) if pd.notna(n_orders) else 0.0
             })

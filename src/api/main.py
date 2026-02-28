@@ -2,6 +2,7 @@
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import RedirectResponse
 from src.api.schemas import (
     ComboRequest,
     DemandRequest,
@@ -33,6 +34,11 @@ def _load_eda_csv(filename: str, branch: str = "all") -> tuple[list, str]:
     if branch != "all" and "branch" in df.columns:
         df = df[df["branch"] == branch]
     return df.to_dict("records"), branch
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health")

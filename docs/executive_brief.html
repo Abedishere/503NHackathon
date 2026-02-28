@@ -28,37 +28,78 @@ ul { margin: 8px 0; }
 
 <table>
 <tr><th>Objective</th><th>Key Finding</th><th>Confidence</th></tr>
-<tr><td>Combo Optimization</td><td>Classic Chimney + Conut The One + Chimney The One are the highest-affinity bundle (lift >50x). 113 multi-item baskets analyzed with Apriori association mining.</td><td class="metric">0.85</td></tr>
-<tr><td>Demand Forecasting</td><td>All 4 branches show <span class="warning">declining trends</span> in recent months. Conut Jnah has the highest absolute revenue but also the steepest December spike (potentially seasonal).</td><td class="metric">0.68</td></tr>
-<tr><td>Expansion Feasibility</td><td>Conut Jnah scores highest (0.67) on composite health metrics. Expansion is feasible at <em>moderate</em> risk tolerance. Strong customer base but limited repeat-purchase data.</td><td class="metric">0.70</td></tr>
-<tr><td>Staffing</td><td>Conut - Tyre is overstaffed on evening shifts; Conut Jnah is understaffed on both morning and evening. Main Street Coffee has evening overstaffing.</td><td class="metric">0.70</td></tr>
-<tr><td>Growth Strategy</td><td>Coffee (5% share) and milkshakes (7% share) both have <span class="metric">high growth potential</span>. Cross-sell with chimney products (top co-purchase items).</td><td class="metric">0.70</td></tr>
+<tr>
+  <td>Combo Optimization</td>
+  <td>
+    <strong>Chimney The One + Conut Berry Mix + Mini The Original</strong> is the highest-affinity bundle (lift = 28.25x, confidence = 100%).
+    115 multi-item baskets analyzed across 3 branches using Apriori association mining.
+    Runner-up: Add Ice Cream + Chimney The Original + Strawberries (lift = 25.11x).
+  </td>
+  <td class="metric">0.85</td>
+</tr>
+<tr>
+  <td>Demand Forecasting</td>
+  <td>
+    All 4 branches show <span class="metric">increasing revenue trends</span>.
+    Main Street Coffee leads in absolute forecast volume (3.3B → 4.7B over 3 months).
+    Conut Jnah shows the steepest growth trajectory (+31% per month).
+    December data for the main Conut branch is a partial-month outlier and is excluded from trend computation.
+  </td>
+  <td class="metric">0.68</td>
+</tr>
+<tr>
+  <td>Expansion Feasibility</td>
+  <td>
+    <strong>Conut Jnah scores highest (0.79)</strong> on composite health metrics — low risk, positive ROI estimate, increasing revenue.
+    Main Street Coffee second (0.73, moderate risk). All 4 branches show increasing demand; expansion is feasible at moderate risk tolerance.
+  </td>
+  <td class="metric">0.70</td>
+</tr>
+<tr>
+  <td>Staffing</td>
+  <td>
+    <strong>Conut - Tyre:</strong> overstaffed evenings (gap −0.8), understaffed mornings (+0.4).<br>
+    <strong>Conut Jnah:</strong> understaffed evenings (+0.6), overstaffed mornings (−0.4).<br>
+    <strong>Main Street Coffee:</strong> overstaffed evenings (−0.4), understaffed mornings (+0.6) and nights (+1.0).<br>
+    <strong>Conut:</strong> overstaffed evenings (−1.1) and mornings (−0.2), understaffed nights (+0.2).
+  </td>
+  <td class="metric">0.70</td>
+</tr>
+<tr>
+  <td>Growth Strategy</td>
+  <td>
+    Coffee (3.8% revenue share, 2,050 units) and milkshakes (2.1% share, 694 units) both have <span class="metric">high growth potential</span> given low penetration relative to core chimney/conut sales.
+    Combined category share is 5.9%. Top cross-sell anchors: Chimney The One, Nutella Spread Chimney, Strawberry.
+  </td>
+  <td class="metric">0.70</td>
+</tr>
 </table>
 
 <h2>3. Recommended Actions</h2>
 <ul>
-<li><strong>Immediate:</strong> Launch a "Classic Chimney + Conut The One" combo deal at a 10% bundle discount.</li>
-<li><strong>Immediate:</strong> Rebalance staffing — shift 1-2 evening staff from Conut - Tyre and Main Street Coffee to morning/evening at Conut Jnah.</li>
-<li><strong>Short-term:</strong> Test an afternoon milkshake promotion (2–5 PM) to grow the milkshake category.</li>
-<li><strong>Short-term:</strong> Introduce a coffee loyalty card targeting repeat customers to grow the 5% coffee revenue share.</li>
-<li><strong>Medium-term:</strong> Conduct foot-traffic study near Conut Jnah for potential 5th branch location.</li>
-<li><strong>Medium-term:</strong> Increase inventory planning horizon using the demand forecast API ahead of seasonal spikes.</li>
+  <li><strong>Immediate:</strong> Launch a <em>"Chimney The One + Conut Berry Mix + Mini The Original"</em> combo deal at a 10% bundle discount — the data's highest-lift (28.25x) and highest-confidence (100%) association.</li>
+  <li><strong>Immediate:</strong> Rebalance staffing — shift evening excess at Conut - Tyre and Conut to morning/evening shortfalls at Conut Jnah and Main Street Coffee nights.</li>
+  <li><strong>Short-term:</strong> Test an afternoon milkshake promotion (2–5 PM) to grow milkshake revenue share from 2.1% toward parity with coffee (3.8%).</li>
+  <li><strong>Short-term:</strong> Introduce a coffee loyalty card targeting repeat customers; coffee is the higher-penetration beverage category and the natural repeat-purchase driver.</li>
+  <li><strong>Medium-term:</strong> Conduct foot-traffic study near Conut Jnah (score 0.79, low risk) for potential 5th branch — its operational model is the strongest template for replication.</li>
+  <li><strong>Medium-term:</strong> Use the demand forecast API to plan inventory ahead of projected growth ramps, especially for Main Street Coffee and Conut Jnah which show the steepest upward trajectories.</li>
 </ul>
 
-<h2>4. Expected Impact & Risks</h2>
+<h2>4. Expected Impact &amp; Risks</h2>
 <table>
 <tr><th>Action</th><th>Expected Impact</th><th>Risk</th></tr>
-<tr><td>Combo bundling</td><td>+8–15% basket size on bundled items</td><td>Low — proven association patterns</td></tr>
-<tr><td>Staffing rebalance</td><td>Labor cost savings + better service at Conut Jnah</td><td>Low — based on actual attendance data</td></tr>
-<tr><td>Coffee/milkshake promotions</td><td>Grow combined share from 12% to 18–20%</td><td>Moderate — requires execution quality</td></tr>
-<tr><td>Expansion</td><td>Revenue from 5th branch</td><td>High — limited data (5 months), needs field validation</td></tr>
+<tr><td>Combo bundling</td><td>+8–15% basket size on bundled items; 28x lift indicates near-certain co-purchase</td><td>Low — proven association patterns at confidence=1.0</td></tr>
+<tr><td>Staffing rebalance</td><td>Labor cost savings at over-staffed shifts; improved service levels at under-staffed ones</td><td>Low — based on actual attendance data across December 2025</td></tr>
+<tr><td>Coffee/milkshake promotions</td><td>Grow combined beverage share from 5.9% toward 10–12% over 2–3 quarters</td><td>Moderate — requires execution quality and marketing spend</td></tr>
+<tr><td>Expansion</td><td>Revenue from 5th branch modelled on Conut Jnah template</td><td>High — only 5 months of data available; field validation required before committing capital</td></tr>
 </table>
 
 <p><strong>Key limitation:</strong> All numeric values are scaled/arbitrary. Recommendations are based on <em>patterns, ratios, and relative comparisons</em>—not absolute figures. With only 5 months of data, seasonal decomposition is not possible; forecasts should be updated as more data accumulates.</p>
 
 <div class="footer">
 Conut AI Operations Agent | Built with Python, FastAPI, scikit-learn, mlxtend, statsmodels | Integrated with OpenClaw<br>
-American University of Beirut — AI Engineering Hackathon 2026
+American University of Beirut — AI Engineering Hackathon 2026<br>
+<strong>Team:</strong> Abdel Rahman El Kouche &nbsp;·&nbsp; Karim Assi &nbsp;·&nbsp; Karl Gerges
 </div>
 
 </body>
