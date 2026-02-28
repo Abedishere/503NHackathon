@@ -1,0 +1,10 @@
+=== Submitting full 5-objective OpenClaw test (fixed API) ===
+Timestamp: Sat Feb 28 15:09:29 MEST 2026
+
+[1/5] COMBO      => {"ok":true,"runId":"6ebbaeef-5638-4e04-a61d-ae0e4a99e3b8"}
+[2/5] DEMAND     => {"ok":true,"runId":"a67aea3c-c673-449b-b97f-1dc1a4e9c8a6"}
+[3/5] EXPANSION  => {"ok":true,"runId":"b431f1d3-5e28-45a9-9e53-648f5533ce3d"}
+[4/5] STAFFING   => {"ok":true,"runId":"bf74e290-3000-4a52-88b0-d34afe1ad744"}
+[5/5] GROWTH     => {"ok":true,"runId":"ea42a910-5acd-4b17-b047-86668f80ef4f"}
+
+All 5 jobs submitted. Waiting 90s for completion...

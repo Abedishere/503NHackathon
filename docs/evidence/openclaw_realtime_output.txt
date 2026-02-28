@@ -1,0 +1,40 @@
+====================================================================
+  CONUT AI OPERATIONS -- OpenClaw Live Integration Test
+  Date    : 2026-02-28
+  Gateway : http://127.0.0.1:18789
+  API     : http://127.0.0.1:8000
+  Model   : openai-codex/gpt-5.3-codex  (Codex OAuth)
+  Skill   : conut-ops
+====================================================================
+
+[1/5] Combo Optimization
+  Result : OK
+  RunId  : 1832532a-d2d0-4c85-8feb-fba8ce17dc6b
+
+[2/5] Demand Forecasting
+  Result : OK
+  RunId  : 0150daff-57f3-451b-add8-2264557d344e
+
+[3/5] Expansion Feasibility
+  Result : OK
+  RunId  : 31f063ef-95eb-4573-b8d4-261ccd750029
+
+[4/5] Shift Staffing
+  Result : OK
+  RunId  : 2af12678-ee6f-49cf-8bbd-0d125d0dbc08
+
+[5/5] Growth Strategy
+  Result : OK
+  RunId  : ad100d47-0932-4b9e-a390-9d2dc9446539
+
+====================================================================
+  SUMMARY
+====================================================================
+  [PASS]  Combo Optimization              1832532a-d2d0-4c85-8feb-fba8ce17dc6b
+  [PASS]  Demand Forecasting              0150daff-57f3-451b-add8-2264557d344e
+  [PASS]  Expansion Feasibility           31f063ef-95eb-4573-b8d4-261ccd750029
+  [PASS]  Shift Staffing                  2af12678-ee6f-49cf-8bbd-0d125d0dbc08
+  [PASS]  Growth Strategy                 ad100d47-0932-4b9e-a390-9d2dc9446539
+
+  5/5 objectives accepted by OpenClaw gateway.
+====================================================================
