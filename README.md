@@ -203,9 +203,9 @@ See [docs/openclaw-integration.md](docs/openclaw-integration.md) for the full in
 See [docs/executive_brief.html](docs/executive_brief.html) for a 2-page executive summary with findings, recommendations, and impact analysis.
 
 ## Contributors
-Abdel Rahman El Kouche
-Karim Assi
-Karl Gerges
+-Abdel Rahman El Kouche
+-Karim Assi
+-Karl Gerges
 
 ---
 
