@@ -1,0 +1,12 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - CONUT_API_HOST=0.0.0.0
+      - CONUT_API_PORT=8000
+    volumes:
+      - ../artifacts:/app/artifacts

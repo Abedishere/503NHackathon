@@ -1,0 +1,61 @@
+patterns_learned: []
+codebase_conventions: []
+past_mistakes:
+- date: '2026-02-28'
+  text: Complete all artifacts before committing—truncated files signal incomplete
+    work
+- date: '2026-02-28'
+  text: Deliver working implementation code, not just configuration scaffolding and
+    planning documents
+- date: '2026-02-28'
+  text: Read requirements carefully—marking mandatory integrations as optional is
+    a critical misunderstanding
+architecture_decisions:
+- date: '2026-02-28'
+  text: '[APPROVED] [Pasted text #1 — 143 lines]:
+
+    do everything required in this pasted text: # Conut AI Engineering Hac: Good,
+    I''ve seen the data structure. Now here''s my review:
+
+
+    ---
+
+
+    **CHANGES_NEEDED**
+
+
+    ### Issues found:
+
+
+    1. **Data path mismatch.** The plan copies data into `data/raw/Conut bakery Scaled
+    Data/` but the'
+task_index:
+- date: 2026-02-28 10:56
+  task: '[Pasted text #1 — 143 lines]:
+
+    do everything required in this pasted text: # Conut AI Engineering Hackathon
+
+
+    ## 12-Hour Chief of Operations Agent Challenge
+
+
+    ### Course
+
+    AI Engineering (focus on AI syste'
+  outcome: APPROVED
+  keywords:
+  - pasted
+  - text
+  - lines
+  - everything
+  - required
+  - conut
+  - engineering
+  - hackathon
+  - hour
+  - chief
+  - operations
+  - agent
+  - challenge
+  - course
+  - focus
