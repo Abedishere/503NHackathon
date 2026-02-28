@@ -107,7 +107,7 @@ def run(
         kpis = build_branch_kpis(net_pos, monthly, menu_mix, cust_orders)
         kpis.to_csv(out_tables / "branch_kpis.csv", index=False)
     except Exception as e:
-        print("⚠️ Skipping branch_kpis due to error:", e)
+        print("[WARNING] Skipping branch_kpis due to error:", e)
 
     # ---------- Plots ----------
     plot_hist_basket_sizes(bsz, out_figs)
@@ -152,7 +152,7 @@ def run(
             scored.to_csv(out_tables / f"combo_pairs_scored_{safe_branch}.csv", index=False)
             all_scored_pairs.append(scored)
         except Exception as e:
-            print(f"⚠️ Skipping scored pairs for {branch} due to error:", e)
+            print(f"[WARNING] Skipping scored pairs for {branch} due to error:", e)
 
         # ---------- Coffee/Milkshake Growth Metrics ----------
         try:
@@ -176,7 +176,7 @@ def run(
                 all_milk_xsell.append(milk_xsell.assign(branch=branch))
 
         except Exception as e:
-            print(f"⚠️ Skipping growth metrics for {branch} due to error:", e)
+            print(f"[WARNING] Skipping growth metrics for {branch} due to error:", e)
 
         # ---------- Optional association rules (OFF by default) ----------
         if save_assoc_rules:
@@ -195,7 +195,7 @@ def run(
                     rules.to_csv(out_tables / f"assoc_rules_{safe_branch}.csv", index=False)
                     freq.to_csv(out_tables / f"freq_itemsets_{safe_branch}.csv", index=False)
             except Exception as e:
-                print(f"⚠️ Association rules failed for {branch}:", e)
+                print(f"[WARNING] Association rules failed for {branch}:", e)
 
     # ---------- Global aggregated insight tables ----------
     if all_scored_pairs:
@@ -218,7 +218,7 @@ def run(
             out_tables / "milkshake_cross_sell_all_branches.csv", index=False
         )
 
-    print("\n✅ EDA complete.")
+    print("\n[OK] EDA complete.")
     print("Tables:", out_tables)
     print("Figures:", out_figs)
     print("Streamlit can now read outputs/tables/*.csv")

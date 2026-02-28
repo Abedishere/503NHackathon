@@ -70,9 +70,16 @@ def growth_metrics(
 
     # cross-sell: items bought by buyers excluding the anchor itself
     def cross_sell(buyers: set[str], anchor_keywords: tuple[str, ...]):
+        _empty = pd.DataFrame(columns=["item", "customers", "qty", "sales"])
+        if not buyers:
+            return _empty
         sub = df[df["customer"].isin(buyers)].copy()
+        if sub.empty:
+            return _empty
         sub["is_anchor"] = sub["item"].apply(lambda x: _contains_any(x, anchor_keywords))
         sub = sub[~sub["is_anchor"]]
+        if sub.empty:
+            return _empty
         out = sub.groupby("item").agg(
             customers=("customer","nunique"),
             qty=("net_qty","sum"),

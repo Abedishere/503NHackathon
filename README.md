@@ -78,37 +78,29 @@ make docker-run     # Run with docker-compose
 
 ### API Endpoints
 
-Once the server is running:
+Once the server is running at `http://localhost:8000`:
 
+**Model endpoints (AI-driven analysis):**
 ```bash
-# Health check
 curl http://localhost:8000/health
-
-# Combo optimization
-curl -X POST http://localhost:8000/combo \
-  -H "Content-Type: application/json" \
-  -d '{"min_support": 0.01, "min_lift": 1.5, "top_n": 10}'
-
-# Demand forecasting
-curl -X POST http://localhost:8000/demand \
-  -H "Content-Type: application/json" \
-  -d '{"branch": "all", "horizon_months": 3}'
-
-# Expansion feasibility
-curl -X POST http://localhost:8000/expansion \
-  -H "Content-Type: application/json" \
-  -d '{"risk_tolerance": "moderate"}'
-
-# Staffing estimation
-curl -X POST http://localhost:8000/staffing \
-  -H "Content-Type: application/json" \
-  -d '{"branch": "all", "period": "next_month"}'
-
-# Growth strategy
-curl -X POST http://localhost:8000/growth \
-  -H "Content-Type: application/json" \
-  -d '{"category": "all"}'
+curl -X POST http://localhost:8000/combo      -H "Content-Type: application/json" -d '{"min_support": 0.01, "min_lift": 1.5, "top_n": 10}'
+curl -X POST http://localhost:8000/demand     -H "Content-Type: application/json" -d '{"branch": "all", "horizon_months": 3}'
+curl -X POST http://localhost:8000/expansion  -H "Content-Type: application/json" -d '{"risk_tolerance": "moderate"}'
+curl -X POST http://localhost:8000/staffing   -H "Content-Type: application/json" -d '{"branch": "all", "period": "next_month"}'
+curl -X POST http://localhost:8000/growth     -H "Content-Type: application/json" -d '{"category": "all"}'
 ```
+
+**EDA data endpoints (pre-computed dashboard tables, all support `?branch=` filter):**
+```bash
+curl "http://localhost:8000/eda/branch-kpis"
+curl "http://localhost:8000/eda/combos?top_n=20"
+curl "http://localhost:8000/eda/growth"
+curl "http://localhost:8000/eda/channels"
+curl "http://localhost:8000/eda/staffing?branch=Conut%20Jnah"
+curl "http://localhost:8000/eda/customers"
+```
+
+> **Note:** EDA endpoints require the EDA pipeline to have been run first: `python -m eda.scripts.run_eda`
 
 All endpoints return a unified JSON response:
 
@@ -125,23 +117,33 @@ All endpoints return a unified JSON response:
 
 ## OpenClaw Integration
 
-This system integrates with [OpenClaw](https://github.com/openclaw/openclaw) so users can query business intelligence from any messaging channel.
+This system integrates with [OpenClaw](https://github.com/openclaw/openclaw) so users can query business intelligence from any messaging channel (WhatsApp, Telegram, Slack, Discord, etc.).
 
 ### Setup
 
 1. Start the API server: `uvicorn src.api.main:app --host 0.0.0.0 --port 8000`
-2. Install the skill in OpenClaw:
+2. Install the skill in OpenClaw managed directory:
    ```bash
-   mkdir -p ~/.openclaw/workspace/skills/conut-ops
-   cp skills/conut-ops/SKILL.md ~/.openclaw/workspace/skills/conut-ops/SKILL.md
+   mkdir -p ~/.openclaw/skills/conut-ops
+   cp skills/conut-ops/SKILL.md ~/.openclaw/skills/conut-ops/SKILL.md
    ```
 3. Set the environment variable:
    ```bash
    export CONUT_API_URL="http://127.0.0.1:8000"
    ```
-4. Ask OpenClaw: *"What are the best product combos for Conut?"*
+4. Ask OpenClaw anything — for example:
+   - *"What are the best product combos for Conut?"* → calls `POST /combo`
+   - *"Show me channel shares by branch"* → calls `GET /eda/channels`
+   - *"Which branch should we expand to?"* → calls `POST /expansion`
 
-See [docs/openclaw-integration.md](docs/openclaw-integration.md) for the full integration spec including webhook push notifications.
+The skill exposes **12 endpoints** through OpenClaw:
+
+| Type | Endpoints |
+|---|---|
+| Model (AI-driven) | `/combo`, `/demand`, `/expansion`, `/staffing`, `/growth` |
+| EDA Data (live tables) | `/eda/branch-kpis`, `/eda/combos`, `/eda/growth`, `/eda/channels`, `/eda/staffing`, `/eda/customers` |
+
+See [docs/openclaw-integration.md](docs/openclaw-integration.md) for the full integration spec.
 
 ## Key Results
 
@@ -181,6 +183,11 @@ See [docs/openclaw-integration.md](docs/openclaw-integration.md) for the full in
 │   ├── architecture.md            # System architecture
 │   ├── openclaw-integration.md    # Integration specification
 │   └── executive_brief.html       # Executive summary (PDF-ready)
+├── eda/
+│   ├── app/                       # Streamlit dashboard (Home + 4 pages)
+│   ├── src/                       # EDA parsers + analytics modules
+│   ├── scripts/run_eda.py         # Generates eda/outputs/tables/*.csv
+│   └── outputs/tables/            # Pre-computed insight tables (served by /eda/* API)
 ├── artifacts/                     # Generated model outputs + cleaned data
 ├── Conut bakery Scaled Data/      # Raw data (9 CSV files)
 ├── requirements.txt               # Pinned dependencies
